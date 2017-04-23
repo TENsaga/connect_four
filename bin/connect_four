@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/connect_four'
+require_relative '../lib/connect_four/board'
+require_relative '../lib/connect_four/printer'
+require_relative '../lib/connect_four/scoring'
+
+ConnectFour.new.run
