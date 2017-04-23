@@ -7,28 +7,39 @@ class Engine
     @board = Board.new
     @scoring = Scoring.new
     @player_turn = ['B', 'R']
+    @error = ''
   end
 
   def run
     until @win
       @win = turn
       @player_turn.rotate!
+      @error.clear
     end
     win
   end
 
   def turn
-    display_full
     loop do
-      col_choice = @printer.display_turn(@player_turn)
-      marker = @board.update_board(@player_turn.first, col_choice)
-      if marker == false
-        display_full
-        @printer.display_invalid_choice
+      if !input = @board.check_column(user_input)
+        @error = 'Column Full, try again'
       else
-        break @scoring.determine_win(marker, @board.board)
+        @marker = @board.update_board(@player_turn.first, input)
+        break
       end
     end
+    @scoring.determine_win(@marker, @board.board)
+  end
+
+  def user_input
+    loop do
+      display_full
+      puts @error unless @error.empty?
+      @printer.display_turn(@player_turn)
+      @input = gets.chomp.to_i - 1
+      @input.between?(0, 6) ? break : @error = 'Columns 1-8, try again'
+    end
+    @input
   end
 
   def win
@@ -37,37 +48,52 @@ class Engine
   end
 
   def display_full
-    clear
+    @printer.clear
     @printer.display_title
-    @board.display_board
+    @printer.display_board(@board.board)
     @printer.display_footer
-  end
-
-  def clear
-    system 'clear'
   end
 end
 
 class Printer
+  def clear
+    system 'clear'
+  end
+
   def display_title
     puts '~~| Ruby Connect 4 |~~'
   end
 
-  def display_win(player)
-    puts "    #{player.last}, you Win!"
-  end
-
-  def display_turn(player)
-    puts "    #{player.first}, your turn:"
-    gets.chomp.to_i - 1
+  def display_board(board)
+    display_board_header
+    display_playable_space(board)
   end
 
   def display_footer
     puts '----------------------'
   end
 
-  def display_invalid_choice
-    puts 'Column full, try again'
+  def display_turn(player)
+    puts "    #{player.first}, your turn:"
+  end
+
+  def display_win(player)
+    puts "    #{player.last}, you Win!"
+  end
+
+  def display_board_header
+    7.times { |i| print " C#{i + 1}" }
+    print "\n"
+  end
+
+  def display_playable_space(board)
+    6.times do |row|
+      7.times do |col|
+        print "|#{board[row][col]} "
+        print '|' if col == 6
+      end
+      print "\n"
+    end
   end
 end
 
@@ -82,33 +108,16 @@ class Board
     @board = Array.new(6) { Array.new(7, '_') }
   end
 
-  def display_board
-    display_board_header
-    display_playable_space
+  def check_column(col_input)
+    @board[0][col_input] == '_' ? col_input : false
   end
 
-  def display_board_header
-    7.times { |i| print " C#{i + 1}" }
-    print "\n"
-  end
-
-  def display_playable_space
-    6.times do |row|
-      7.times do |col|
-        print "|#{@board[row][col]} "
-        print '|' if col == 6
-      end
-      print "\n"
-    end
-  end
-
-  def update_board(player, col_choice)
+  def update_board(player, col_input)
     5.downto(0) do |row|
-      next unless @board[row][col_choice] == '_'
-      @board[row][col_choice] = player
-      return @marker = [row, col_choice]
+      next unless @board[row][col_input] == '_'
+      @board[row][col_input] = player
+      return @marker = [row, col_input]
     end
-    false
   end
 end
 
@@ -121,10 +130,13 @@ class Scoring
     diagonal_down_shift_marker
     diagonal_up_shift_marker
 
-    @results << check_sequence(horizontal_values)
-    @results << check_sequence(vertical_values)
-    @results << check_sequence(diagonal_down_values)
-    @results << check_sequence(diagonal_up_values)
+    values = [horizontal_values,
+              vertical_values,
+              diagonal_down_values,
+              diagonal_up_values]
+
+    values.each { |v| @results << check_sequence(v) }
+
     @results.any?
   end
 
@@ -169,7 +181,7 @@ class Scoring
 
   def diagonal_up_shift_marker
     (@marker_up[1]).upto(6) do
-      break if @marker_up[1] == 6 #|| @marker_up[0][1] > 1
+      break if @marker_up[1] == 6
       @marker_up.map!.with_index do |x, index|
         if    index == 1 && x < 6 then x + 1
         elsif index.zero? && x > 0 then x - 1
