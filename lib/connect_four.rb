@@ -1,26 +1,73 @@
 require_relative 'connect_four/version'
+require 'pry'
 
 class Engine
   def initialize
     @printer = Printer.new
     @board = Board.new
+    @scoring = Scoring.new
+    @player_turn = ['B', 'R']
   end
 
   def run
-    @printer.welcome
-    @board.display_board
-    turn
+    until @win
+      @win = turn
+      @player_turn.rotate!
+    end
+    win
   end
 
   def turn
-    print 'test'
+    display_full
+    loop do
+      col_choice = @printer.display_turn(@player_turn)
+      marker = @board.update_board(@player_turn.first, col_choice)
+      if marker == false
+        display_full
+        @printer.display_invalid_choice
+      else
+        break @scoring.determine_win(marker, @board.board)
+      end
+    end
   end
 
+  def win
+    display_full
+    @printer.display_win(@player_turn)
+  end
+
+  def display_full
+    clear
+    @printer.display_title
+    @board.display_board
+    @printer.display_footer
+  end
+
+  def clear
+    system 'clear'
+  end
 end
 
 class Printer
-  def welcome
-    puts "~~~ Welcome to C4! ~~~"
+  def display_title
+    puts '~~| Ruby Connect 4 |~~'
+  end
+
+  def display_win(player)
+    puts "    #{player.last}, you Win!"
+  end
+
+  def display_turn(player)
+    puts "    #{player.first}, your turn:"
+    gets.chomp.to_i - 1
+  end
+
+  def display_footer
+    puts '----------------------'
+  end
+
+  def display_invalid_choice
+    puts 'Column full, try again'
   end
 end
 
@@ -28,8 +75,7 @@ class Board
   attr_accessor :board
 
   def initialize
-    @board ||= create_board
-    @marker = [1, 1]
+    @board = create_board
   end
 
   def create_board
@@ -56,50 +102,50 @@ class Board
     end
   end
 
-  def determine_location(player, col_choice)
+  def update_board(player, col_choice)
     5.downto(0) do |row|
       next unless @board[row][col_choice] == '_'
       @board[row][col_choice] = player
-      break @marker = [row, col_choice]
+      return @marker = [row, col_choice]
     end
     false
   end
+end
 
-  def determine_win
-    p @marker # [5, 1]
+class Scoring
+  def determine_win(marker, board)
+    @marker = marker
+    @board = board
+
+    reset
+    diagonal_down_shift_marker
+    diagonal_up_shift_marker
+
+    @results << check_sequence(horizontal_values)
+    @results << check_sequence(vertical_values)
+    @results << check_sequence(diagonal_down_values)
+    @results << check_sequence(diagonal_up_values)
+    @results.any?
+  end
+
+  def reset
     @diagonal_down = []
     @diagonal_up = []
     @vertical_line = []
+    @results = []
     @marker_down = Array.new(@marker)
     @marker_up = Array.new(@marker)
-
-    determine_sequence(horizontal)
-    #print !@board[@marker[0]].join.match(/([B|R])\1{3,}/).nil?
-
-    determine_sequence(vertical)
-    # vertical
-    # line = ''
-    # 0.upto(5) do |i|
-    #   line += @board[i][@marker[1]]
-    # end
-    # print !line.match(/([B|R])\1{3,}/).nil?
-
-    # diagonal
-    diagonal_down_shift_marker
-    determine_sequence(diagonal_down_build_values)
-    diagonal_up_shift_marker
-    determine_sequence(diagonal_up_build_values)
   end
 
-  def determine_sequence(input)
-    p !input.join.match(/([B|R])\1{3,}/).nil?
+  def check_sequence(input)
+    !input.join.match(/([B|R])\1{3,}/).nil?
   end
 
-  def horizontal
+  def horizontal_values
     @board[@marker[0]]
   end
 
-  def vertical
+  def vertical_values
     0.upto(5) do |i|
       @vertical_line << @board[i][@marker[1]]
     end
@@ -113,7 +159,7 @@ class Board
     end
   end
 
-  def diagonal_down_build_values
+  def diagonal_down_values
     (@marker_down[1]).downto(0).with_index do |col, index|
       break if (@marker_down[0] - index).negative?
       @diagonal_down << @board[@marker_down[0] - index][col]
@@ -133,7 +179,7 @@ class Board
     end
   end
 
-  def diagonal_up_build_values
+  def diagonal_up_values
     (@marker_up[1]).downto(0).with_index do |col, index|
       break if (@marker_up[1] - index).negative? || (@marker_up[0] + index) == 6
       @diagonal_up << @board[@marker_up[0] + index][col]
@@ -142,26 +188,5 @@ class Board
   end
 end
 
-# Engine.new.run
-
-# Engine.new.run
-
-board = Board.new
-
-# board.display_board
-board.determine_location('R', 2)
-board.display_board
-board.determine_win
-# board.determine_location('B', 1)
-# board.display_board
-# board.determine_location('R', 1)
-# board.display_board
-# board.determine_location('B', 1)
-# board.display_board
-# board.determine_location('R', 1)
-# board.display_board
-# p board.determine_location('R', 1)
-# board.display_board
-# p board.determine_location('B', 1)
-
+Engine.new.run
 
