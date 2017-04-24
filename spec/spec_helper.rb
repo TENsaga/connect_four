@@ -1,5 +1,8 @@
-require "bundler/setup"
-require "connect_four"
+require 'bundler/setup'
+require 'connect_four'
+require 'connect_four/board'
+require 'connect_four/printer'
+require 'connect_four/scoring'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
