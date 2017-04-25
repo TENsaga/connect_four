@@ -1,41 +1,32 @@
 class Printer
+  TITLE  = '~~| Ruby Connect 4 |~~'.freeze
+  FOOTER = '----------------------'.freeze
+
   def clear
     system 'clear'
   end
 
+  def display_error(error)
+    puts error unless error.empty?
+  end
+
   def display_title
-    puts '~~| Ruby Connect 4 |~~'
+    puts TITLE
   end
 
   def display_board(board)
-    display_board_header
-    display_playable_space(board)
+    board.to_s
   end
 
   def display_footer
-    puts '----------------------'
+    puts FOOTER
   end
 
   def display_turn(player)
-    puts "    #{player.first}, your turn:"
+    puts "    #{player}, your turn:"
   end
 
   def display_win(player)
-    puts "    #{player.last}, you Win!"
-  end
-
-  def display_board_header
-    7.times { |i| print " C#{i + 1}" }
-    print "\n"
-  end
-
-  def display_playable_space(board)
-    6.times do |row|
-      7.times do |col|
-        print "|#{board[row][col]} "
-        print '|' if col == 6
-      end
-      print "\n"
-    end
+    puts "    #{player}, you Win!"
   end
 end

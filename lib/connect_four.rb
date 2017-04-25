@@ -3,51 +3,51 @@ class ConnectFour
     @board = Board.new
     @printer = Printer.new
     @scoring = Scoring.new
-    @player_turn = ['B', 'R']
+    @player = %w[B R]
     @error = ''
   end
 
   def run
     until @win
       @win = turn
-      @player_turn.rotate!
+      @player.rotate!
       @error.clear
     end
     win
   end
 
   def turn
-    loop do
-      if !input = @board.check_column(user_input)
-        @error = 'Column Full, try again'
-      else
-        @marker = @board.update_board(@player_turn.first, input)
-        break
-      end
-    end
+    input = user_input
+    @marker = @board.update_board(@player.first, input)
     @scoring.determine_win(@marker, @board.board)
   end
 
   def user_input
     loop do
       display_full
-      puts @error unless @error.empty?
-      @printer.display_turn(@player_turn)
-      @input = gets.chomp.to_i - 1
-      @input.between?(0, 6) ? break : @error = 'Columns 1-8, try again'
+      input = gets.chomp.to_i - 1
+      user_input_validate(input)
+      return input if @error.empty?
     end
-    @input
+  end
+
+  def user_input_validate(input)
+    @error.clear
+    @error = 'Columns 1-8, try again' unless input.between?(0, 6)
+    @error = 'Column Full, try again' unless @board.check_column(input)
   end
 
   def win
     display_full
-    @printer.display_win(@player_turn)
+    @printer.display_win(@player.last)
   end
 
   def display_full
     @printer.clear
     @printer.display_title
-    @printer.display_board(@board.board)
+    @printer.display_board(@board)
     @printer.display_footer
+    @printer.display_error(@error)
+    @printer.display_turn(@player.first)
   end
 end

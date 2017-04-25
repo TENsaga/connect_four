@@ -5,18 +5,6 @@ RSpec.describe Board do
     @board = Board.new
   end
 
-  describe '#create_board' do
-    it 'returns array with 7x6 grid of "_"' do
-      expect(Board.new.create_board).to eq([
-        ["_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_"]])
-    end
-  end
-
   describe '#board' do
     it 'returns full 7x6 board' do
       expect(@board.board).to eq([
