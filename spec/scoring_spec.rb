@@ -14,6 +14,7 @@ RSpec.describe Board do
 
     @scoring.instance_variable_set(:@diagonal_down, [])
     @scoring.instance_variable_set(:@diagonal_up, [])
+    @scoring.instance_variable_set(:@diagonal, [])
     @scoring.instance_variable_set(:@vertical_line, [])
     @scoring.instance_variable_set(:@results, [])
     @scoring.instance_variable_set(:@marker_down, [0, 0])
@@ -99,7 +100,11 @@ RSpec.describe Board do
   describe '#diagonal_down_values' do
     it 'collects values from @marker up to boundary' do
       @scoring.send(:diagonal_down_shift_marker)
-      expect(@scoring.send(:diagonal_down_values)).to eq(["_", "_", "B", "_", "_", "R"])
+      marker_down = @scoring.instance_variable_get(:@marker_down)
+      expect(@scoring.send(:diagonal_values,
+                           'down',
+                           marker_down[0],
+                           marker_down[1])).to eq(["_", "_", "B", "_", "_", "R"])
     end
   end
 
@@ -113,7 +118,11 @@ RSpec.describe Board do
   describe '#diagonal_up_values' do
     it 'collects values from @marker up to boundary' do
       @scoring.send(:diagonal_up_shift_marker)
-      expect(@scoring.send(:diagonal_up_values)).to eq(["_", "_", "R", "_", "_", "B"])
+      marker_up = @scoring.instance_variable_get(:@marker_up)
+      expect(@scoring.send(:diagonal_values,
+                           'up',
+                           marker_up[0],
+                           marker_up[1])).to eq(["_", "_", "R", "_", "_", "B"])
     end
   end
 end

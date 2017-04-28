@@ -3,13 +3,10 @@ class Scoring
     @marker = marker
     @board = board
     reset
-    diagonal_down_shift_marker
-    diagonal_up_shift_marker
-
     values = [horizontal_values,
               vertical_values,
-              diagonal_down_values,
-              diagonal_up_values]
+              diagonal_values('down', @marker_down[0], @marker_down[1]),
+              diagonal_values('up', @marker_up[0], @marker_up[1])]
     values.each { |v| @results << check_sequence(v) }
     @results.any?
   end
@@ -17,12 +14,13 @@ class Scoring
   private
 
   def reset
-    @diagonal_down = []
-    @diagonal_up = []
-    @vertical_line = []
     @results = []
+    @diagonal = []
+    @vertical_line = []
     @marker_down = Array.new(@marker)
     @marker_up = Array.new(@marker)
+    diagonal_down_shift_marker
+    diagonal_up_shift_marker
   end
 
   # Check for 4 in a row match of B|R
@@ -49,15 +47,6 @@ class Scoring
     end
   end
 
-  # Gathers values from @marker reverse to boundary
-  def diagonal_down_values
-    (@marker_down[1]).downto(0).with_index do |col, index|
-      break if (@marker_down[0] - index).negative?
-      @diagonal_down << @board[@marker_down[0] - index][col]
-    end
-    @diagonal_down
-  end
-
   # Primer for diagonal up values - Moves marker up diagonally
   def diagonal_up_shift_marker
     (@marker_up[1]).upto(6) do
@@ -71,12 +60,18 @@ class Scoring
     end
   end
 
-  # Gathers values from @marker reverse to boundary
-  def diagonal_up_values
-    (@marker_up[1]).downto(0).with_index do |col, index|
-      break if (@marker_up[1] - index).negative? || (@marker_up[0] + index) == 6
-      @diagonal_up << @board[@marker_up[0] + index][col]
+  # Gather values from marker row/col and stop at boundary, based on direction
+  def diagonal_values(dir, m_row, m_col)
+    m_col.downto(0).with_index do |col, index|
+      if dir == 'down'
+        break if (m_row - index).negative?
+        char = @board[m_row - index][col]
+      else
+        break if (m_col - index).negative? || (m_row + index) == 6
+        char = @board[m_row + index][col]
+      end
+      @diagonal << char
     end
-    @diagonal_up
+    @diagonal
   end
 end

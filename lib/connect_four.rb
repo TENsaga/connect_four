@@ -33,8 +33,11 @@ class ConnectFour
 
   def user_input_validate(input)
     @error.clear
-    @error = 'Columns 1-8, try again' unless input.between?(0, 6)
-    @error = 'Column Full, try again' unless @board.check_column(input)
+    if !input.between?(0, 6)
+      @error = 'Columns 1-8, try again'
+    elsif !@board.check_column(input)
+      @error = 'Column Full, try again'
+    end
   end
 
   def win
@@ -48,6 +51,6 @@ class ConnectFour
     @printer.display_board(@board)
     @printer.display_footer
     @printer.display_error(@error)
-    @printer.display_turn(@player.first)
+    @printer.display_turn(@player.first) unless @win
   end
 end
